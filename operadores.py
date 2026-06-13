@@ -43,4 +43,3 @@ def matriz_diferenciacao(N, nos_xi, V):
     
     D = np.dot(Vx, np.linalg.inv(V))
     return D
-
