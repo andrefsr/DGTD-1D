@@ -56,8 +56,6 @@ def vis_grade(X_inicio,X_fim,n_elementos,ordem_polinomio):
     # Gerar a malha corrigida
     malha, nos_macro = gerar_malha_gll_1d(X_inicio, X_fim, n_elementos, ordem_polinomio)
 
-    print(f"Total de pontos únicos na malha global: {len(malha)}")
-
     # --- Visualização da Malha ---
     plt.figure(figsize=(12, 3))
     plt.scatter(malha, np.zeros_like(malha), color='blue', s=40, zorder=3, label='Pontos GLL')
