@@ -1,6 +1,6 @@
 import numpy as np
 
-Nfaces = 2
+Nfaces = 2 
 Nfp = 1
 
 def Lift1D(Np,V):
@@ -19,7 +19,7 @@ def fator_geometrico1D(x,Dr):
     return rx , J
 
 def normal_1D(K):
-    nx = np.ones(Nfp*Nfaces,K)
+    nx = np.ones((Nfp*Nfaces,K))
     nx[0,:] = -1
     return nx
 
@@ -30,33 +30,18 @@ def EtoV(K):
     for k in range(K):
         EToV[k,:] = [k, k+1]
 
-    return EtoV
-
-
-import numpy as np
+    return EToV
 
 def Connect1D(EToV):
-    """
-    EToV: matriz (K,2)
-          Elemento -> vértices
-
-    Retorna:
-        EToE : Elemento -> elemento vizinho
-        EToF : Elemento -> face do vizinho
-    """
-
     Nfaces = 2
 
-    # número de elementos
     K = EToV.shape[0]
 
     TotalFaces = Nfaces * K
     Nv = K + 1
 
-    # face local -> vértice local
     vn = np.array([0, 1])
 
-    # Face global -> Vértice global
     SpFToV = np.zeros((TotalFaces, Nv), dtype=int)
 
     sk = 0
@@ -65,12 +50,10 @@ def Connect1D(EToV):
 
             vertice = EToV[k, vn[face]]
 
-            # EToV do MATLAB começa em 1
             SpFToV[sk, vertice] = 1
 
             sk += 1
 
-    # Face global -> Face global
     SpFToF = SpFToV @ SpFToV.T - np.eye(TotalFaces, dtype=int)
 
     faces1, faces2 = np.where(SpFToF == 1)
@@ -81,21 +64,65 @@ def Connect1D(EToV):
     element2 = faces2 // Nfaces
     face2    = faces2 % Nfaces
 
-    # Inicialização
     EToE = np.tile(np.arange(K)[:, None], (1, Nfaces))
     EToF = np.tile(np.arange(Nfaces), (K, 1))
 
-    # Preenche conectividades
     EToE[element1, face1] = element2
     EToF[element1, face1] = face2
 
     return EToE, EToF
 
+def BuildMaps1D(Np, K, x, EToE, EToF):
 
-K = 4
+    NODETOL = 1e-10
 
-EToE, EToF = Connect1D(EtoV(K))
+    # faces -> nós locais
+    Fmask = np.array([[0, Np-1]])
 
-#print(etov)
-print(EToE)
-print(EToF)
+    # numeração global dos nós
+    nodeids = np.arange(K*Np).reshape((Np, K), order='F')
+
+    vmapM = np.zeros((Nfp, Nfaces, K), dtype=int)
+    vmapP = np.zeros((Nfp, Nfaces, K), dtype=int)
+
+    # --------------------------
+    # construir vmapM
+    # --------------------------
+
+    for k1 in range(K):
+        for f1 in range(Nfaces):
+
+            vmapM[:, f1, k1] = nodeids[Fmask[:,f1], k1]
+
+    # --------------------------
+    # construir vmapP
+    # --------------------------
+
+    for k1 in range(K):
+        for f1 in range(Nfaces):
+
+            k2 = EToE[k1,f1]
+            f2 = EToF[k1,f1]
+
+            vidM = vmapM[:,f1,k1]
+            vidP = vmapM[:,f2,k2]
+
+            x1 = x.flatten(order='F')[vidM]
+            x2 = x.flatten(order='F')[vidP]
+
+            D = (x1-x2)**2
+
+            if np.all(D < NODETOL):
+                vmapP[:,f1,k1] = vidP
+
+    # achatamento
+    vmapM = vmapM.flatten(order='F')
+    vmapP = vmapP.flatten(order='F')
+
+    # nós de contorno
+    mapB = np.where(vmapM == vmapP)[0]
+
+    vmapB = vmapM[mapB]
+
+    return vmapM, vmapP, vmapB, mapB
+
