@@ -72,31 +72,38 @@ def Connect1D(EToV):
 
     return EToE, EToF
 
-def BuildMaps1D(Np, K, x, EToE, EToF):
+import numpy as np
 
+def MeshGen1D(xmin, xmax, K):
+    # Número de vértices
+    Nv = K + 1
+
+    # Coordenadas dos vértices
+    VX = np.linspace(xmin, xmax, Nv)
+
+    # Conectividade elemento-vértice
+    EToV = np.column_stack([
+        np.arange(K),
+        np.arange(1, K + 1)
+    ])
+
+    return Nv, VX, K, EToV
+
+def BuildMaps1D(Np, K, x, EToE, EToF):
     NODETOL = 1e-10
 
-    # faces -> nós locais
     Fmask = np.array([[0, Np-1]])
-
-    # numeração global dos nós
-    nodeids = np.arange(K*Np).reshape((Np, K), order='F')
+    #nodeids = np.arange(K*Np).reshape((Np, K), order='F')
+    # O jeito CORRETO de gerar os IDs para mapeamento em Python DGTD
+    nodeids = np.arange(K * Np).reshape((Np, K), order='F')
 
     vmapM = np.zeros((Nfp, Nfaces, K), dtype=int)
     vmapP = np.zeros((Nfp, Nfaces, K), dtype=int)
-
-    # --------------------------
-    # construir vmapM
-    # --------------------------
 
     for k1 in range(K):
         for f1 in range(Nfaces):
 
             vmapM[:, f1, k1] = nodeids[Fmask[:,f1], k1]
-
-    # --------------------------
-    # construir vmapP
-    # --------------------------
 
     for k1 in range(K):
         for f1 in range(Nfaces):
@@ -112,17 +119,20 @@ def BuildMaps1D(Np, K, x, EToE, EToF):
 
             D = (x1-x2)**2
 
+            print("k1 =", k1, "f1 =", f1)
+            print("vidM =", vidM)
+            print("vidP =", vidP)
+            print("x1 =", x1)
+            print("x2 =", x2)
+            print("D =", D)
+            print()
+
             if np.all(D < NODETOL):
                 vmapP[:,f1,k1] = vidP
 
-    # achatamento
     vmapM = vmapM.flatten(order='F')
     vmapP = vmapP.flatten(order='F')
-
-    # nós de contorno
     mapB = np.where(vmapM == vmapP)[0]
-
     vmapB = vmapM[mapB]
-
     return vmapM, vmapP, vmapB, mapB
 
