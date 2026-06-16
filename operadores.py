@@ -1,45 +1,25 @@
 import numpy as np
+import gll1D as gll
 
-def polinomio_legendre(i, xi):
-    if i == 0: return np.ones_like(xi)
-    if i == 1: return xi
-    P_0 = np.ones_like(xi)
-    P_1 = xi
-    for n in range(1, i):
-        P_next = ((2 * n + 1) * xi * P_1 - n * P_0) / (n + 1)
-        P_0, P_1 = P_1, P_next
-    return P_1
-
-def V1D(N, nos_xi):
-    Np = N + 1
+def matriz_diferenciaçao(Np):
     V = np.zeros((Np, Np))
-    for j in range(Np):
-        V[:, j] = polinomio_legendre(j, nos_xi)
-    return V
+    Vr = np.zeros((Np, Np))
+    N = Np - 1
+    r = gll.ref(N,Np)
 
-def derivada_legendre(i, xi):
-    if i == 0: 
-        return np.zeros_like(xi)
-    if i == 1:
-        return np.ones_like(xi)
-        
-    dP = np.zeros_like(xi)
-    
-    nas_bordas = np.isclose(np.abs(xi), 1.0)
-    no_interior = ~nas_bordas
-    
-    dP[no_interior] = (i * (polinomio_legendre(i-1, xi[no_interior]) - xi[no_interior] * polinomio_legendre(i, xi[no_interior]))) / (1.0 - xi[no_interior]**2)
-    
-    valor_borda = i * (i + 1) / 2.0
-    dP[nas_bordas] = np.where(xi[nas_bordas] > 0, valor_borda, ((-1)**(i-1)) * valor_borda)
-    
-    return dP
+    for i in range(Np):
+        for j in range(Np):
+            V[i, j] = gll.legendre_norm(j, r[i])
+            Vr[i, j] = gll.grad_legendre_norm(j, r[i])
 
-def matriz_diferenciacao(N, nos_xi, V):
-    Np = N + 1
-    Vx = np.zeros((Np, Np))
-    for j in range(Np):
-        Vx[:, j] = derivada_legendre(j, nos_xi)
-    
-    D = np.dot(Vx, np.linalg.inv(V))
-    return D
+    invV = np.linalg.inv(V)
+    Dr = Vr @ invV
+    return Dr, V
+
+def Lift(Np,V):
+    Dr, V = matriz_diferenciaçao(Np)
+    Emat = np.zeros((Np, 2))
+    Emat[0, 0] = 1.0   # Face esquerda
+    Emat[-1, 1] = 1.0  # Face direita
+    LIFT = V @ (V.T @ Emat)
+    return LIFT
