@@ -46,6 +46,10 @@ def vmap(Np,K):
     vmapP[0, 1:] = vmapM[1, 0:-1]
     vmapP[1, 0:-1] = vmapM[0, 1:]
 
-    vmapP[0, 0] = vmapM[0, 0]      
-    vmapP[1, -1] = vmapM[1, -1]
+    #vmapP[0, 0] = vmapM[0, 0]      
+    #vmapP[1, -1] = vmapM[1, -1]
+
+    # Condições de Contorno Periódicas
+    vmapP[0, 0] = vmapM[1, -1]  # A face esquerda do 1º elemento "enxerga" a face direita do último
+    vmapP[1, -1] = vmapM[0, 0]  # A face direita do último elemento "enxerga" a face esquerda do 1º
     return vmapM, vmapP

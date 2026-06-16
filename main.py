@@ -8,7 +8,7 @@ import operadores as op
 N = 8
 K = 10
 Np = N + 1
-a_vel = 2 * np.pi  
+a_vel = 1 
 FinalTime = 10
 
 vmapM, vmapP = gll.vmap(Np,K)
@@ -24,7 +24,7 @@ def advecrhs1D(u, time, a):
     uM = u_flat[vmapM]
     uP = u_flat[vmapP]
     
-    uP[0, 0] = -np.sin(a * time)
+    #uP[0, 0] = -np.sin(a * time)
     
     du = (uM - uP) * (a * nx - (1.0 - alpha) * np.abs(a * nx)) / 2.0
     
@@ -62,14 +62,19 @@ def advec1D(u, FinalTime, a):
         
     return u, pp
 
-u_initial = np.sin(x)
+#u_initial = np.sin(x)
+kx = 2*np.pi
+u_initial = np.sin(kx*x)
+
+# Condição Inicial: Pulso Gaussiano centrado em x = 0.5
+#u_initial = np.exp(-100 * (x - 0.5)**2)
 
 u_final, pp = advec1D(u_initial, FinalTime, a_vel)
 
 plt.figure()
 plt.title(f'DGTD 1D (Hesthaven)\n K = {K}, N = {N}, Tempo = {FinalTime}', fontsize=12)
 plt.plot(x.flatten(order='F'), u_final.flatten(order='F'), label='Solução Numérica', color='royalblue')
-plt.plot(x.flatten(order='F'), np.sin(x.flatten(order='F') - a_vel * FinalTime), '--', label='Exata', color='darkorange')
+plt.plot(x.flatten(order='F'), np.sin(kx*x.flatten(order='F') - a_vel * FinalTime), '--', label='Exata', color='darkorange')
 plt.ylabel('u(x)')
 plt.xlabel('x')
 plt.grid(alpha=0.3)
@@ -101,16 +106,14 @@ linha_num, = ax.plot(x_flat, pp[0], color='royalblue', label='Solução Numéric
 ax.legend()
 plt.tight_layout()
 
-# 3. Função que atualiza o gráfico a cada frame
+passo = 15 # Pula de 10 em 10 frames (aumente este número para acelerar mais)
+
 def atualizar(frame_index):
-    # Atualiza os dados Y da linha com o array armazenado em pp no índice atual
+    # O frame_index agora vai pular de 10 em 10
     linha_num.set_ydata(pp[frame_index])
     return linha_num,
 
-# 4. Criando e rodando a animação
-# Dica: Como você está salvando 'pp' dentro do loop 'intrk' (5 vezes por passo de tempo), 
-# a lista pode ficar enorme. Se a animação ficar muito lenta, você pode pular frames 
-# alterando para: frames=range(0, len(pp), 5)
-ani = FuncAnimation(fig, atualizar, frames=len(pp), interval=5, blit=True)
+# O range(0, len(pp), passo) gera os números: 0, 10, 20, 30...
+ani = FuncAnimation(fig, atualizar, frames=range(0, len(pp), passo), interval=20, blit=True)
 
 plt.show()
