@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.special import legendre
 
+# Nós de referencia
 def gll_nodes(N,Np):
     if N == 0: return np.array([0.0])
     x = np.zeros(Np)

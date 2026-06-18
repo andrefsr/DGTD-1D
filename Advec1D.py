@@ -41,7 +41,7 @@ def advec1D(u, FinalTime, a):
     xmin = np.min(np.abs(x[0, :] - x[1, :]))
     
     CFL = 0.5
-    dt = CFL / a * xmin
+    dt = CFL / np.abs(a) * xmin
     Nsteps = int(np.ceil(FinalTime / dt))
     dt = FinalTime / Nsteps
     
@@ -51,30 +51,47 @@ def advec1D(u, FinalTime, a):
     rk4b = [1432997174477.0/9575080441755.0, 5161836677717.0/13612068292357.0, 1720146321549.0/2090206949498.0, 3134564353537.0/4481467310338.0, 2277821191437.0/14882151754819.0]
     rk4c = [0.0, 1432997174477.0/9575080441755.0, 2526269341429.0/6820363962896.0, 2006345519317.0/3224310063776.0, 2802321613138.0/2924317926251.0]
 
-    for _ in range(Nsteps):
+    for n in range(Nsteps):
+
         for intrk in range(5):
             timelocal = time + rk4c[intrk] * dt
             rhsu = advecrhs1D(u, timelocal, a)
             resu = rk4a[intrk] * resu + dt * rhsu
             u = u + rk4b[intrk] * resu
             pp.append(u.flatten(order='F'))
+        u[0,0] =  -np.sin(2*np.pi*n*dt)
         time += dt
         
     return u, pp
 
 #u_initial = np.sin(x)
 kx = 2*np.pi
-u_initial = np.sin(kx*x)
+#u_initial = np.sin(kx*x)
 
-# Condição Inicial: Pulso Gaussiano centrado em x = 0.5
 #u_initial = np.exp(-100 * (x - 0.5)**2)
+u_initial = np.zeros_like(x)
+#mask1 = (x >= 0.25) & (x <= 0.5)
+#u_initial[mask1] = 4*x[mask1] -1
+#mask2 = (x >= 0.5) & (x <= 0.75)
+#u_initial[mask2] = -4*x[mask2] + 3
+
+#mask =(x >= 0.3) & (x <= 0.7)
+#u_initial[mask] = 1
+
+VX = np.linspace(0, 1, K + 1)
+
+
+plt.figure()
+plt.plot(VX,np.zeros_like(VX),'o')
+plt.plot(x.flatten(order='F'),u_initial.flatten(order='F'))
+plt.show()
 
 u_final, pp = advec1D(u_initial, FinalTime, a_vel)
 
 plt.figure()
 plt.title(f'DGTD 1D (Hesthaven)\n K = {K}, N = {N}, Tempo = {FinalTime}', fontsize=12)
 plt.plot(x.flatten(order='F'), u_final.flatten(order='F'), label='Solução Numérica', color='royalblue')
-plt.plot(x.flatten(order='F'), np.sin(kx*x.flatten(order='F') - a_vel * FinalTime), '--', label='Exata', color='darkorange')
+#plt.plot(x.flatten(order='F'), np.sin(kx*x.flatten(order='F') - a_vel * FinalTime), '--', label='Exata', color='darkorange')
 plt.ylabel('u(x)')
 plt.xlabel('x')
 plt.grid(alpha=0.3)
