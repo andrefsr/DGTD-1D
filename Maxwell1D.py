@@ -158,4 +158,6 @@ def atualizar(frame_index):
 # O range(0, len(pp), passo) gera os números: 0, 10, 20, 30...
 ani = FuncAnimation(fig, atualizar, frames=range(0, len(pp), passo), interval=20, blit=True)
 
+#ani.save("resultado.gif",writer="pillow",fps=30)
+
 plt.show()

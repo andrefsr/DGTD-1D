@@ -3,3 +3,5 @@ Figuras/
 __pycache__/
 gabarito.py
 P1.ipynb
+*.png
+*.gif
