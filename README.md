@@ -1,2 +1,2 @@
-<img width="640" height="480" alt="resultado" src="https://github.com/user-attachments/assets/cf0088fd-55fb-4fec-b4f5-12cbdcc5acb4" />
-<img width="640" height="480" alt="Figure_1" src="https://github.com/user-attachments/assets/43a28a8d-a3c8-49c6-86c2-4e24521acbcf" />
+<img width="640" height="480" alt="resultado" src="https://github.com/user-attachments/assets/4d08a4d6-0b89-4452-8e11-153d70a4fd2e" />
+<img width="640" height="480" alt="exercicio8" src="https://github.com/user-attachments/assets/84fb2e67-dbe5-4961-a228-211121fb432c" />
