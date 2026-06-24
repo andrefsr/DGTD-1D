@@ -59,17 +59,17 @@ def advec1D(u, FinalTime, a):
             resu = rk4a[intrk] * resu + dt * rhsu
             u = u + rk4b[intrk] * resu
             pp.append(u.flatten(order='F'))
-        u[0,0] =  -np.sin(2*np.pi*n*dt)
+        #u[0,0] =  -np.sin(2*np.pi*n*dt)
         time += dt
         
     return u, pp
 
 #u_initial = np.sin(x)
 kx = 2*np.pi
-#u_initial = np.sin(kx*x)
+u_initial = np.sin(kx*x)
 
 #u_initial = np.exp(-100 * (x - 0.5)**2)
-u_initial = np.zeros_like(x)
+#u_initial = np.zeros_like(x)
 #mask1 = (x >= 0.25) & (x <= 0.5)
 #u_initial[mask1] = 4*x[mask1] -1
 #mask2 = (x >= 0.5) & (x <= 0.75)
@@ -132,5 +132,8 @@ def atualizar(frame_index):
 
 # O range(0, len(pp), passo) gera os números: 0, 10, 20, 30...
 ani = FuncAnimation(fig, atualizar, frames=range(0, len(pp), passo), interval=20, blit=True)
+
+ani.save("exercicio6.gif",writer="pillow",fps=30)
+
 
 plt.show()

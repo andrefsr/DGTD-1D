@@ -37,7 +37,6 @@ def MaxwellRHS1D(E,H):
     dE = E_flat[vmapM] - E_flat[vmapP]
     dH = H_flat[vmapM] - H_flat[vmapP]
 
-    # 1. Correção: Achatar Zimp antes de usar os índices globais vmapM e vmapP
     Zimp_flat = Zimp.flatten(order='F')
     ZimpM = Zimp_flat[vmapM]
     ZimpP = Zimp_flat[vmapP]
@@ -47,7 +46,6 @@ def MaxwellRHS1D(E,H):
     Ebc = -E_flat[vmapB]
     Hbc = H_flat[vmapB]
     
-    # 2. Correção: Converter os índices lineares de mapB para coordenadas 2D
     mapB_2d = np.unravel_index(mapB, dE.shape, order='F')
     
     dE[mapB_2d] = E_flat[vmapB] - Ebc
