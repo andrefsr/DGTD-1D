@@ -5,15 +5,15 @@ import operadores as op
 import gll1D as gll
 
 N = 8
-K = 10
+K = 20
 Np = N + 1
 Nfaces = 2
 Nfp = 1
-FinalTime = 1 
+FinalTime = 10 
 
 eps = np.ones((Np,K))*8.854*10**(-12)
 mu = np.ones((Np,K))*4*np.pi*10**(-7)
-
+sigma = np.zeros_like(eps)
 Zimp = np.sqrt(mu/eps)
 
 vmapM, vmapP, mapB, vmapB = gll.vmap(Np,K)
@@ -22,6 +22,10 @@ Dr, V = op.matriz_diferenciaçao(Np)
 LIFT = op.Lift(Np,V)
 pp = []
 
+mask1 = (x >= 0) & (x <= 0.5)
+eps[mask1] = 3*8.854*10**(-12)
+sigma[mask1] = 10
+
 dE =  np.zeros((Nfp*Nfaces,K))
 dH =  np.zeros((Nfp*Nfaces,K))
 ZimpM = np.zeros_like(dE)
@@ -29,33 +33,40 @@ ZimpP = np.zeros_like(dE)
 YimpM = np.zeros_like(dE)
 YimpP = np.zeros_like(dE)
 
-def MaxwellRHS1D(E,H):
-
+def MaxwellRHS1D(E, H):
+    
     E_flat = E.flatten(order='F')
     H_flat = H.flatten(order='F')
-
+    
     dE = E_flat[vmapM] - E_flat[vmapP]
     dH = H_flat[vmapM] - H_flat[vmapP]
-
+    
     Zimp_flat = Zimp.flatten(order='F')
     ZimpM = Zimp_flat[vmapM]
     ZimpP = Zimp_flat[vmapP]
     YimpM = 1 / ZimpM
     YimpP = 1 / ZimpP
-
-    Ebc = -E_flat[vmapB]
-    Hbc = H_flat[vmapB]
+    
+    # ---------------------------------------------------------
+    # CONDIÇÃO DE CONTORNO DE SILVER-MÜLLER (Absorvente)
+    # Campos externos definidos como zero para não injetar ondas
+    # ---------------------------------------------------------
+    Ebc = 0.0
+    Hbc = 0.0
     
     mapB_2d = np.unravel_index(mapB, dE.shape, order='F')
     
     dE[mapB_2d] = E_flat[vmapB] - Ebc
-    dH[mapB_2d] = H_flat[vmapB] - Hbc    
-
+    dH[mapB_2d] = H_flat[vmapB] - Hbc
+    
+    # Cálculo dos fluxos Upwind
     fluxE = (nx * ZimpP * dH - dE) / (ZimpM + ZimpP)
     fluxH = (nx * YimpP * dE - dH) / (YimpM + YimpP)
-
+    
     rhsE = (-rx * (Dr @ H) + LIFT @ (Fscale * fluxE)) / eps
     rhsH = (-rx * (Dr @ E) + LIFT @ (Fscale * fluxH)) / mu
+    
+    rhsE -= (sigma / eps) * E
 
     return rhsE, rhsH
 
@@ -74,11 +85,11 @@ def Maxwell1D(E, H):
     xmin = np.min(np.abs(x[0,:] - x[1,:]))
     
     # Reduzir o CFL para garantir estabilidade no DG com RK4
-    CFL = 0.5 
+    CFL = 0.2
     
     # O novo dt considera a velocidade da luz!
     dt = CFL * (xmin / c_max)
-    FinalTime = 500*dt
+    FinalTime = 1500*dt
     
     Nsteps = int(np.ceil(FinalTime / dt)) 
     dt = FinalTime / Nsteps
@@ -101,12 +112,14 @@ def Maxwell1D(E, H):
             E += rk4b[INTRK] * resE
             H += rk4b[INTRK] * resH
             pp.append(E.flatten(order='F'))
-
+            if n <= 500:
+                E[3,0] = np.exp(-((n*dt - 1.8e-9)**2  / (0.6e-9)**2))
         time += dt
         
     return E, H
 
-E = np.exp(-100 * (x - 0.5)**2)
+#E = np.exp(-100 * (x - 0.5)**2)
+E = np.zeros_like(x)
 H = np.zeros_like(E)
 
 E, H = Maxwell1D(E,H)
@@ -144,6 +157,8 @@ ax.set_xlim(x_flat.min(), x_flat.max())
 # Criamos a linha vazia (pegamos o primeiro estado de pp)
 linha_num, = ax.plot(x_flat, pp[0], color='royalblue', label='Solução Numérica')
 ax.legend()
+ax.axvline(x= 0,ls='--',color='red')
+ax.axvline(x=0.5,ls='--',color='red')
 plt.tight_layout()
 
 passo = 15 # Pula de 10 em 10 frames (aumente este número para acelerar mais)
@@ -153,9 +168,9 @@ def atualizar(frame_index):
     linha_num.set_ydata(pp[frame_index])
     return linha_num,
 
-# O range(0, len(pp), passo) gera os números: 0, 10, 20, 30...
+# O range(0, l en(pp), passo) gera os números: 0, 10, 20, 30...
 ani = FuncAnimation(fig, atualizar, frames=range(0, len(pp), passo), interval=20, blit=True)
 
-#ani.save("resultado.gif",writer="pillow",fps=30)
+ani.save("P2 exercício 3.gif",writer="pillow",fps=30)
 
 plt.show()

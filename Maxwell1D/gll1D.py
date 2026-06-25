@@ -22,7 +22,7 @@ def ref(N,Np):
 
 def fator_geometrico(K,Np):
     N = Np-1
-    VX = np.linspace(0, 1, K + 1)
+    VX = np.linspace(-2, 2, K + 1)
 
     x = np.zeros((Np, K))
     for k in range(K):
